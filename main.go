@@ -47,7 +47,10 @@ func main() {
 	log.Println("connected")
 	// #region get
 
-	cityName := os.Args[1]
+	cityName := "Tokyo"
+	if len(os.Args) >= 2 {
+		cityName = os.Args[1]
+	}
 
 	var city City
 	err = db.Get(&city, "SELECT * FROM city WHERE Name = ?", cityName)
@@ -67,4 +70,15 @@ func main() {
 		log.Fatalf("DB Error: %s\n", err)
 	}
 	log.Printf("%sの人口は%sの人口の%f%%です\n", city.Name, city.CountryCode, float64(city.Population)/float64(countryPop)*100)
+
+	var cities []City
+	err = db.Select(&cities, "SELECT * FROM city WHERE CountryCode = 'JPN'") //?を使わない場合、第3引数以降は不要
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("日本の都市一覧")
+	for _, city := range cities {
+		log.Printf("都市名: %s, 人口: %d\n", city.Name, city.Population)
+	}
 }
