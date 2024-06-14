@@ -55,6 +55,7 @@ func main() {
 
 	e.GET("/cities/:cityName", getCityInfoHandler)
 	e.POST("/cities", addCityHandler)
+	e.GET("/cities/country/:countryName", getAllCitiesInCountryHandler)
 
 	e.Start(":8080")
 }
@@ -92,4 +93,27 @@ func addCityHandler(c echo.Context) error {
 	city.ID = int(id)
 
 	return c.JSON(http.StatusCreated, city)
+}
+
+func getAllCitiesInCountryHandler(c echo.Context) error {
+	countryName := c.Param("countryName")
+
+	var countryCode string
+	err := db.Get(&countryCode, "SELECT code FROM country WHERE Name = ?", countryName)
+	if errors.Is(err, sql.ErrNoRows) {
+		return echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("No such country Name = %s", countryName))
+	}
+	if err != nil {
+		log.Printf("DB Error: %s", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error")
+	}
+
+	var cities []City
+	err = db.Select(&cities, "SELECT * FROM city WHERE countryCode = ?", countryCode)
+	if err != nil {
+		log.Printf("DB Error: %s", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error")
+	}
+
+	return c.JSON(http.StatusOK, cities)
 }
