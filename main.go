@@ -60,4 +60,11 @@ func main() {
 	}
 	// #endregion get
 	log.Printf("%sの人口は%d人です\n", cityName, city.Population)
+
+	var countryPop int
+	err = db.Get(&countryPop, "SELECT Population FROM country WHERE Code = ?", city.CountryCode)
+	if err != nil {
+		log.Fatalf("DB Error: %s\n", err)
+	}
+	log.Printf("%sの人口は%sの人口の%f%%です\n", city.Name, city.CountryCode, float64(city.Population)/float64(countryPop)*100)
 }
